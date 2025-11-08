@@ -1,0 +1,41 @@
+# -------------------------
+# Solidity / Foundry
+# -------------------------
+# Compiler outputs
+cache/
+out/
+
+# Deployment / broadcast logs
+broadcast/
+
+# ZkSync / extra output
+zkout/
+
+# -------------------------
+# Node / JavaScript / NPM
+# -------------------------
+node_modules/
+npm-debug.log*
+yarn-error.log*
+package-lock.json   # optional: commit if you want deterministic installs
+yarn.lock           # optional: commit if using Yarn
+
+# -------------------------
+# IDE / Editor / OS
+# -------------------------
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# -------------------------
+# Secrets / Env
+# -------------------------
+.env
+.env.local
+.env.*.local
+
+# -------------------------
+# Libraries (optional)
+# -------------------------
+# If using submodules, you can ignore lib/
