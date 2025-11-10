@@ -1,66 +1,74 @@
-## Foundry
+# 🎟️ Raffle Smart Contract  
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+**Author:** Antony Cheng | **Solidity:** 0.8.19 | **License:** MIT  
 
-Foundry consists of:
+A provably fair lottery system powered by **Chainlink VRF v2.5**. Players enter by paying an entrance fee, and at set intervals, a random winner is picked automatically.  
 
-- **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
-- **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
-- **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
-- **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+---
 
-## Documentation
+## 🚀 Features
 
-https://book.getfoundry.sh/
+- **Fair randomness** via Chainlink VRF  
+- **Enter the raffle** by sending ETH ≥ entrance fee  
+- **Automatic winner selection** at configurable intervals  
+- **Secure ETH transfer** using CEI pattern  
+- **Event logging** for easy front-end integration  
+- **Gas-efficient custom errors**  
 
-## Usage
+---
 
-### Build
+## ⚡ Quick Example
 
-```shell
-$ forge build
-```
+```solidity
+Raffle raffle = new Raffle(
+    0.01 ether,         // entrance fee
+    300,                // interval in seconds
+    vrfCoordinatorAddr, // VRF Coordinator
+    keyHash,            // gas lane / key hash
+    subscriptionId,     // Chainlink subscription
+    100000              // callback gas limit
+);
 
-### Test
+raffle.enterRaffle{value: 0.01 ether}();
+📊 Contract Overview
+States: OPEN (accepting entries), CALCULATING (selecting winner)
 
-```shell
-$ forge test
-```
+Events: RaffleEntered, WinnerPicked, RequestedRaffleWinner
 
-### Format
+Errors: Raffle__SendMoreToEnterRaffle, Raffle__TransferFailed, Raffle__RaffleNotOpen, Raffle__UpkeepNotNeeded
 
-```shell
-$ forge fmt
-```
+Key Functions: enterRaffle(), checkUpkeep(), performUpkeep(), fulfillRandomWords()
 
-### Gas Snapshots
+🛠 Deployment Notes
+Fund a Chainlink VRF subscription (v2.5)
 
-```shell
-$ forge snapshot
-```
+Configure contract constructor parameters: entrance fee, interval, VRF Coordinator, key hash, subscription ID, callback gas limit
 
-### Anvil
+Deploy using Foundry, Hardhat, or Remix
 
-```shell
-$ anvil
-```
+✅ Security Highlights
+Checks-Effects-Interactions (CEI) pattern
 
-### Deploy
+Only opens raffle when conditions are met
 
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
+Random winner chosen using provably fair VRF
 
-### Cast
+Reset state securely after each raffle round
 
-```shell
-$ cast <subcommand>
-```
+📂 Repository Structure
+bash
+Copy code
+contracts/
+    Raffle.sol
+lib/
+    chainlink-brownie-contracts/
+test/
+    RaffleTest.t.sol
+foundry.toml
+README.md
+📈 Next Steps
+Integrate with a frontend to visualize entries and winners
 
-### Help
+Add Foundry tests to cover all edge cases
 
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
-```
+Extend for multiple raffle rounds or token-based entries
