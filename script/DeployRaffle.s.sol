@@ -5,11 +5,7 @@ pragma solidity ^0.8.19;
 import {Script} from "../lib/forge-std/src/Script.sol";
 import {Raffle} from "src/Raffle.sol";
 import {HelperConfig} from "script/HelperConfig.s.sol";
-import {
-    CreateSubscription,
-    FundSubscription,
-    AddConsumer
-} from "script/Interactions.s.sol";
+import {CreateSubscription, FundSubscription, AddConsumer} from "script/Interactions.s.sol";
 
 contract DeployRaffle is Script {
     function run() public {
@@ -25,18 +21,13 @@ contract DeployRaffle is Script {
         if (config.subscriptionId == 0) {
             // create subscription
             CreateSubscription createSubscription = new CreateSubscription();
-            (config.subscriptionId, config.vrfCoordinator) = createSubscription
-                .createSubscription(config.vrfCoordinator, config.account); //use the same address as the test
+            (config.subscriptionId, config.vrfCoordinator) =
+                createSubscription.createSubscription(config.vrfCoordinator, config.account); //use the same address as the test
 
             // Fund it!
 
             FundSubscription fundSubscription = new FundSubscription();
-            fundSubscription.fundSubscription(
-                config.vrfCoordinator,
-                config.subscriptionId,
-                config.link,
-                config.account
-            );
+            fundSubscription.fundSubscription(config.vrfCoordinator, config.subscriptionId, config.link, config.account);
         }
 
         vm.startBroadcast(config.account);
@@ -52,12 +43,7 @@ contract DeployRaffle is Script {
 
         AddConsumer addConsumer = new AddConsumer();
         //don't need to broadcast, because in (interactions) addConsumer already have broadcast
-        addConsumer.addConsumer(
-            address(raffle),
-            config.vrfCoordinator,
-            config.subscriptionId,
-            config.account
-        );
+        addConsumer.addConsumer(address(raffle), config.vrfCoordinator, config.subscriptionId, config.account);
 
         return (raffle, helperConfig);
     }

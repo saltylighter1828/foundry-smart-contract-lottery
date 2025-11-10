@@ -29,7 +29,8 @@ import {
     VRFV2PlusClient
 } from "../lib/chainlink-brownie-contracts/contracts/src/v0.8/vrf/dev/libraries/VRFV2PlusClient.sol";
 
-/** @title Sample Raffle Contract
+/**
+ *  @title Sample Raffle Contract
  *  @author Antony Cheng
  *  @notice This contract is for creating a sample raffle
  *  @dev This implements Chainlink VRFv2.5
@@ -39,11 +40,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
     error Raffle__SendMoreToEnterRaffle(); //have Raffle__ before error name to avoid confusion with other contracts
     error Raffle__TransferFailed();
     error Raffle__RaffleNotOpen();
-    error Raffle__UpkeepNotNeeded(
-        uint256 balance,
-        uint256 playersLength,
-        uint256 raffleState
-    );
+    error Raffle__UpkeepNotNeeded(uint256 balance, uint256 playersLength, uint256 raffleState);
 
     /* Type Declarations */
     enum RaffleState {
@@ -89,6 +86,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
         s_lastTimeStamp = block.timestamp;
         s_raffleState = RaffleState.OPEN; //which is also the same as RaffleState(0) - defaulting to be OPEN - code is more readable this way
     }
+
     function enterRaffle() external payable {
         //require(msg.value >= I_ENTRANCE_FEE, Raffle__SendMoreToEnterRaffle); only works with specific version and compiler
         if (msg.value < I_ENTRANCE_FEE) {
@@ -104,6 +102,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
         //3. Makes front end 'indexing' easier
         emit RaffleEntered(msg.sender);
     }
+
     //When should the winner be picked?
     /**
      * @dev This is the function that the Chainlink nodes will call to see
@@ -127,8 +126,7 @@ contract Raffle is VRFConsumerBaseV2Plus {
             bytes memory /* performData */ //bool upkeepNeeded in paramater defaults to false
         )
     {
-        bool timeHasPassed = ((block.timestamp - s_lastTimeStamp) >=
-            I_INTERVAL);
+        bool timeHasPassed = ((block.timestamp - s_lastTimeStamp) >= I_INTERVAL);
         bool isOpen = (s_raffleState == RaffleState.OPEN);
         bool hasBalance = address(this).balance > 0;
         bool hasPlayers = s_players.length > 0;
@@ -139,17 +137,17 @@ contract Raffle is VRFConsumerBaseV2Plus {
     //1. Get a random number
     //2. Use that number to pick a random winner
     //3. Be automatically triggered
-    function performUpkeep(bytes calldata /* performData */) external {
+    function performUpkeep(
+        bytes calldata /* performData */
+    )
+        external
+    {
         // check to see if enough time has passed
 
-        (bool upkeepNeeded, ) = checkUpkeep("");
+        (bool upkeepNeeded,) = checkUpkeep("");
         /*swap the bytes calldata, from calldata to memory in the checkupKeep function to fix error (""). becuase called data can only be generated from user's transcation but not from smart contract */
         if (!upkeepNeeded) {
-            revert Raffle__UpkeepNotNeeded(
-                address(this).balance,
-                s_players.length,
-                uint256(s_raffleState)
-            );
+            revert Raffle__UpkeepNotNeeded(address(this).balance, s_players.length, uint256(s_raffleState));
         }
         s_raffleState = RaffleState.CALCULATING; //change state to calculating during block confirmations
 
@@ -158,27 +156,32 @@ contract Raffle is VRFConsumerBaseV2Plus {
         // 2. Get RNG give us a random number (callback function)
         // requestId = s_vrfCoordinator.requestRandomWords(
 
-        VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient
-            .RandomWordsRequest({
-                keyHash: I_KEYHASH, //Gas Lane = Gas price
-                subId: I_SUBSCRIPTION_ID,
-                requestConfirmations: REQUEST_CONFIRMATIONS,
-                callbackGasLimit: I_CALLBACK_GAS_LIMIT, //how much your willing to pay for callback gas
-                numWords: NUM_WORDS,
-                extraArgs: VRFV2PlusClient._argsToBytes(
-                    // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
-                    VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
-                )
-            });
+        VRFV2PlusClient.RandomWordsRequest memory request = VRFV2PlusClient.RandomWordsRequest({
+            keyHash: I_KEYHASH, //Gas Lane = Gas price
+            subId: I_SUBSCRIPTION_ID,
+            requestConfirmations: REQUEST_CONFIRMATIONS,
+            callbackGasLimit: I_CALLBACK_GAS_LIMIT, //how much your willing to pay for callback gas
+            numWords: NUM_WORDS,
+            extraArgs: VRFV2PlusClient._argsToBytes(
+                // Set nativePayment to true to pay for VRF requests with Sepolia ETH instead of LINK
+                VRFV2PlusClient.ExtraArgsV1({nativePayment: false})
+            )
+        });
 
         uint256 requestId = s_vrfCoordinator.requestRandomWords(request);
         emit RequestedRaffleWinner(requestId); //This is redundant as the vrfCoordinator already emits this event. However, it is easier to test.
     }
+
     // CEI: Checks, Effects, Interactions Pattern - one of the most important security patterns
     function fulfillRandomWords(
-        uint256 /*requestId*/,
+        uint256,
+        /*requestId*/
         uint256[] calldata randomWords
-    ) internal virtual override {
+    )
+        internal
+        virtual
+        override
+    {
         //Checks
         //1. Conditionals like (Require)
         //2. Important to do checks first to save gas if conditions not met
@@ -199,13 +202,15 @@ contract Raffle is VRFConsumerBaseV2Plus {
         emit WinnerPicked(s_recentWinner); //This was actually below bool success but moved up for CEI pattern (because emit is an internal state change)
 
         //Interactions (External Contract Interactions)
-        (bool success, ) = recentWinner.call{value: address(this).balance}("");
+        (bool success,) = recentWinner.call{value: address(this).balance}("");
         if (!success) {
             revert Raffle__TransferFailed(); //custom error gas efficient - at the top
         }
     }
 
-    /** Getter Function */
+    /**
+     * Getter Function
+     */
     function getEntranceFee() external view returns (uint256) {
         return I_ENTRANCE_FEE;
     }
